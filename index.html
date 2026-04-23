@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Simulador de Contracheque - TJPE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #1e3a8a; /* Deep navy blue from the image */
+            --primary-hover: #1e40af;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .glass-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            animation: fadeIn 1s ease-out;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-wrapper span {
+            position: absolute;
+            left: 12px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* font-size: 16px evita o zoom automático no iPhone (iOS) */
+        input[type="text"], input[type="number"] {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.6rem 0.5rem 0.6rem 2.2rem;
+            border-radius: 8px;
+            font-size: 16px; 
+            outline: none;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .proventos-title { color: var(--text-main); }
+        .deducoes-title { color: var(--text-main); }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 1.2fr;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 1.2fr;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .item-row:hover {
+            background: #f1f5f9;
+        }
+
+        .item-label {
+            font-size: 0.95rem;
+            display: flex;
+            flex-direction: column;
+            font-weight: 500;
+        }
+
+        .item-label small {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 0.2rem;
+            font-weight: 400;
+        }
+
+        .read-only-val {
+            text-align: right;
+            font-weight: 500;
+            font-size: 1rem;
+            padding: 0.6rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+        }
+
+        .total-row {
+            border-top: 1px solid var(--card-border);
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            font-weight: 600;
+            background: #ffffff;
+        }
+
+        .total-row .read-only-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: #f1f5f9;
+        }
+
+        .provento-val { color: var(--success); }
+        .deducao-val { color: var(--danger); }
+
+        .summary-card {
+            background: #ffffff;
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            margin-top: 2rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.1), 0 4px 6px -2px rgba(30, 58, 138, 0.05);
+        }
+
+        .summary-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .summary-header h3 {
+            font-size: 1.2rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .summary-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .summary-col {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .summary-col:first-child {
+            border-right: 1px solid var(--card-border);
+        }
+
+        .summary-col p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .summary-col h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* -------------------------- */
+        /* RESPONSIVIDADE PARA CELULAR */
+        /* -------------------------- */
+        @media (max-width: 650px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+            .glass-panel {
+                padding: 1.5rem 1rem;
+            }
+            .table-header { 
+                display: none; 
+            }
+            .item-row { 
+                grid-template-columns: 1fr 1fr; /* Duas colunas para os números */
+                gap: 0.75rem;
+                background: #ffffff;
+                border: 1px solid var(--card-border);
+                margin-bottom: 1rem;
+                padding: 1rem;
+                align-items: start;
+            }
+            .item-label { 
+                grid-column: 1 / -1; /* Ocupa a linha toda */
+                font-weight: 600; 
+                font-size: 1.05rem;
+                border-bottom: 1px dashed var(--card-border);
+                padding-bottom: 0.5rem;
+                margin-bottom: 0.25rem;
+            }
+            
+            /* Injetando "Atual" e "Com Reajuste" acima dos campos no mobile */
+            .input-wrapper::before {
+                content: "Atual";
+                display: block;
+                width: 100%;
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                margin-bottom: 0.25rem;
+                font-weight: normal;
+                position: absolute;
+                top: -20px;
+                left: 0;
+                pointer-events: none;
+            }
+            .input-wrapper {
+                margin-top: 20px;
+            }
+
+            .read-only-val::before {
+                content: "Com Reajuste";
+                display: block;
+                width: 100%;
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                margin-bottom: 0.25rem;
+                font-weight: normal;
+                position: absolute;
+                top: -20px;
+                left: 0;
+                text-align: left;
+                pointer-events: none;
+            }
+            .read-only-val {
+                position: relative;
+                margin-top: 20px;
+                text-align: left;
+                padding: 0.6rem 0.5rem;
+                background: #f8fafc;
+            }
+
+            .total-row {
+                background: #f1f5f9;
+            }
+
+            .summary-body { 
+                grid-template-columns: 1fr; 
+            }
+            .summary-col:first-child { 
+                border-right: none; 
+                border-bottom: 1px solid var(--card-border); 
+            }
+            .summary-col h2 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="js-warning" style="background-color: #ffebee; color: #c62828; padding: 15px; margin-bottom: 20px; border-radius: 8px; text-align: center; font-weight: 500; font-size: 0.95rem; border: 1px solid #ffcdd2; margin: 15px;">
+        ⚠️ <b>Aviso:</b> O seu iPhone/WhatsApp bloqueou os cálculos por segurança.<br><br>
+        Para a calculadora funcionar, toque no ícone de Compartilhar (ou no ícone do Safari) e escolha <b>"Abrir no Safari"</b> ou <b>"Abrir no Navegador"</b>.
+    </div>
+    <div class="container">
+        <header>
+            <h1>Simulador de Contracheque</h1>
+            <p class="subtitle">Oficiais de Justiça - TJPE</p>
+        </header>
+
+        <div class="glass-panel">
+            <div class="controls">
+                <div class="input-group">
+                    <label for="reajuste">Cenário de Reajuste (%)</label>
+                    <div class="input-wrapper" style="width: 150px; margin-top: 0;">
+                        <span>%</span>
+                        <input type="text" id="reajuste" value="5.3" step="0.1" inputmode="decimal" style="padding-left: 2rem; font-size: 1.2rem; font-weight: bold; text-align: center; color: var(--primary);">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROVENTOS -->
+            <div class="section">
+                <h2 class="section-title proventos-title">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    Proventos
+                </h2>
+                
+                <div class="table-header">
+                    <div>Descrição</div>
+                    <div>Valor Atual (R$)</div>
+                    <div>Com Reajuste (R$)</div>
+                </div>
+
+                <div class="item-row">
+                    <div class="item-label">Vencimento</div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="vencimento" value="7634.45" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="read-only-val provento-val" id="vencimento_reaj">R$ 0,00</div>
+                </div>
+                <div class="item-row">
+                    <div class="item-label">Indenização Transporte (ITJ)</div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="itj" value="2649.30" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="read-only-val provento-val" id="itj_reaj">R$ 0,00</div>
+                </div>
+                <div class="item-row">
+                    <div class="item-label">Gratificação Risco de Vida</div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="risco_vida" value="685.36" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="read-only-val provento-val" id="risco_vida_reaj">R$ 0,00</div>
+                </div>
+                <div class="item-row">
+                    <div class="item-label">Adicional Qualificação
+                        <select id="perc_qualificacao" style="margin-top: 0.2rem; padding: 0.2rem; border-radius: 4px; border: 1px solid var(--card-border); font-size: 0.85rem; width: fit-content; outline: none; background: #ffffff; color: var(--primary); font-weight: bold;">
+                            <option value="0">0%</option>
+                            <option value="0.03" selected>3%</option>
+                            <option value="0.045">4,5%</option>
+                        </select>
+                    </div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="qualificacao" value="0.00" readonly tabindex="-1" style="background: #f1f5f9; color: var(--success); font-weight: 600;">
+                    </div>
+                    <div class="read-only-val provento-val" id="qualificacao_reaj">R$ 0,00</div>
+                </div>
+                <div class="item-row">
+                    <div class="item-label">Auxílio Alimentação</div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="alimentacao" value="1359.28" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="read-only-val provento-val" id="alimentacao_reaj">R$ 0,00</div>
+                </div>
+                <div class="item-row">
+                    <div class="item-label">Auxílio Creche</div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="creche" value="300.00" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="read-only-val provento-val" id="creche_reaj">R$ 0,00</div>
+                </div>
+
+                <div class="item-row total-row">
+                    <div class="item-label">Total Proventos</div>
+                    <div class="read-only-val provento-val" id="total_prov_atual">R$ 0,00</div>
+                    <div class="read-only-val provento-val" id="total_prov_reaj">R$ 0,00</div>
+                </div>
+            </div>
+
+            <!-- DEDUÇÕES -->
+            <div class="section">
+                <h2 class="section-title deducoes-title">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path></svg>
+                    Deduções
+                </h2>
+                
+                <div class="table-header">
+                    <div>Descrição</div>
+                    <div>Valor Atual (R$)</div>
+                    <div>Com Reajuste (R$)</div>
+                </div>
+
+                <div class="item-row">
+                    <div class="item-label">Dependentes (IRRF)</div>
+                    <div class="input-wrapper">
+                        <span>#</span>
+                        <input type="text" id="dependentes" value="0" inputmode="numeric" style="padding-left: 2.2rem; text-align: center;">
+                    </div>
+                    <div class="read-only-val" style="background: transparent; border: none; color: transparent; pointer-events: none;"></div>
+                </div>
+
+                <div class="item-row">
+                    <div class="item-label">FUNAFIN (14%)<br><small>Sobre Vencimento + Qualificação</small></div>
+                    <div class="read-only-val deducao-val" id="funafin_atual">R$ 0,00</div>
+                    <div class="read-only-val deducao-val" id="funafin_reaj">R$ 0,00</div>
+                </div>
+                <div class="item-row">
+                    <div class="item-label">IRRF (Tabela Progressiva)<br><small>Base: Venc + Qualif + Risco - FUNAFIN</small></div>
+                    <div class="read-only-val deducao-val" id="irrf_atual">R$ 0,00</div>
+                    <div class="read-only-val deducao-val" id="irrf_reaj">R$ 0,00</div>
+                </div>
+                <div class="item-row">
+                    <div class="item-label">Descontos Pessoais Total<br><small>Empréstimos, Mensalidades, etc.</small></div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="descontos_pessoais" value="" placeholder="0.00" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="read-only-val deducao-val" id="descontos_pessoais_reaj">R$ 0,00</div>
+                </div>
+
+                <div class="item-row total-row">
+                    <div class="item-label">Total Deduções</div>
+                    <div class="read-only-val deducao-val" id="total_ded_atual">R$ 0,00</div>
+                    <div class="read-only-val deducao-val" id="total_ded_reaj">R$ 0,00</div>
+                </div>
+            </div>
+
+            <!-- SUMMARY CARD -->
+            <div class="summary-card">
+                <div class="summary-header">
+                    <h3>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20m-7-7h14M5 9h14"></path></svg>
+                        Resumo do Contracheque
+                    </h3>
+                </div>
+                <div class="summary-body">
+                    <div class="summary-col">
+                        <p>Líquido Atual</p>
+                        <h2 id="liquido_atual" style="color: var(--text-main);">R$ 0,00</h2>
+                    </div>
+                    <div class="summary-col">
+                        <p>Líquido Com Reajuste</p>
+                        <h2 id="liquido_reaj" style="color: var(--success);">R$ 0,00</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getVal(id) {
+            let val = document.getElementById(id).value;
+            if (typeof val === 'string') {
+                if (val.includes(',')) {
+                    val = val.replace(/\./g, '').replace(',', '.');
+                }
+            }
+            return parseFloat(val) || 0;
+        }
+
+        function formatBRL(value) {
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function calcularTributo(venc, qualif, risco, dependentes = 0) {
+            const funafin = (venc + qualif) * 0.14;
+            // Base IR: Proventos tributáveis - FUNAFIN - Dedução por dependente (189,59)
+            const irrf_base = (venc + qualif + risco) - funafin - (dependentes * 189.59);
+            let irrf = 0;
+            
+            // Tabela Progressiva Base (mantendo os valores já ajustados ao TJPE)
+            if (irrf_base > 4664.68) {
+                irrf = (irrf_base * 0.275) - 908.73;
+            } else if (irrf_base > 3751.05) {
+                irrf = (irrf_base * 0.225) - 675.50;
+            } else if (irrf_base > 2826.65) {
+                irrf = (irrf_base * 0.15) - 394.12;
+            } else if (irrf_base > 2259.20) {
+                irrf = (irrf_base * 0.075) - 169.44;
+            }
+            if (irrf < 0) irrf = 0;
+
+            // Aplica a nova regra de Isenção e Redutor (Lei nº 15.270/2025 - Vigente a partir de 2026)
+            if (irrf_base <= 5000.00) {
+                // Isenção total para base de cálculo até R$ 5.000,00
+                irrf = 0;
+            } else if (irrf_base <= 7350.00) {
+                // Redutor decrescente para base entre R$ 5.000,01 e R$ 7.350,00
+                const redutor = 978.62 - (0.133145 * irrf_base);
+                if (redutor > 0) {
+                    irrf = irrf - redutor;
+                    if (irrf < 0) irrf = 0;
+                }
+            }
+
+            return { funafin, irrf };
+        }
+
+        function calcular() {
+            // Reajuste
+            const reajustePercent = getVal('reajuste') / 100;
+            const multiplier = 1 + reajustePercent;
+
+            // Valores Base (Atuais)
+            const v_venc = getVal('vencimento');
+            const v_itj = getVal('itj');
+            const v_risco = getVal('risco_vida');
+            
+            // Calcula Qualificação
+            const perc_qualif = parseFloat(document.getElementById('perc_qualificacao').value) || 0;
+            const v_qualif = v_venc * perc_qualif;
+            document.getElementById('qualificacao').value = v_qualif.toFixed(2).replace('.', ',');
+
+            const v_alim = getVal('alimentacao');
+            const v_creche = getVal('creche');
+            const v_desc = getVal('descontos_pessoais');
+
+            // Valores Reajustados
+            const r_venc = v_venc * multiplier;
+            const r_risco = v_risco * multiplier;
+            const r_qualif = r_venc * perc_qualif; // Acompanha o vencimento
+            
+            // Verbas indenizatórias acompanhando o reajuste linear
+            const r_itj = v_itj * multiplier; 
+            const r_alim = v_alim * multiplier;
+            const r_creche = v_creche * multiplier;
+
+            // Atualiza UI Proventos Reajustados
+            document.getElementById('vencimento_reaj').textContent = formatBRL(r_venc);
+            document.getElementById('itj_reaj').textContent = formatBRL(r_itj);
+            document.getElementById('risco_vida_reaj').textContent = formatBRL(r_risco);
+            document.getElementById('qualificacao_reaj').textContent = formatBRL(r_qualif);
+            document.getElementById('alimentacao_reaj').textContent = formatBRL(r_alim);
+            document.getElementById('creche_reaj').textContent = formatBRL(r_creche);
+
+            // Totais Proventos
+            const total_prov_atual = v_venc + v_itj + v_risco + v_qualif + v_alim + v_creche;
+            const total_prov_reaj = r_venc + r_itj + r_risco + r_qualif + r_alim + r_creche;
+            
+            document.getElementById('total_prov_atual').textContent = formatBRL(total_prov_atual);
+            document.getElementById('total_prov_reaj').textContent = formatBRL(total_prov_reaj);
+
+            // Dependentes
+            const dependentes = parseInt(document.getElementById('dependentes').value) || 0;
+
+            // Tributos
+            const trib_atual = calcularTributo(v_venc, v_qualif, v_risco, dependentes);
+            const trib_reaj = calcularTributo(r_venc, r_qualif, r_risco, dependentes);
+
+            // Atualiza UI Deduções
+            document.getElementById('funafin_atual').textContent = formatBRL(trib_atual.funafin);
+            document.getElementById('funafin_reaj').textContent = formatBRL(trib_reaj.funafin);
+            
+            document.getElementById('irrf_atual').textContent = formatBRL(trib_atual.irrf);
+            document.getElementById('irrf_reaj').textContent = formatBRL(trib_reaj.irrf);
+
+            document.getElementById('descontos_pessoais_reaj').textContent = formatBRL(v_desc);
+
+            // Totais Deduções
+            const total_ded_atual = trib_atual.funafin + trib_atual.irrf + v_desc;
+            const total_ded_reaj = trib_reaj.funafin + trib_reaj.irrf + v_desc;
+
+            document.getElementById('total_ded_atual').textContent = formatBRL(total_ded_atual);
+            document.getElementById('total_ded_reaj').textContent = formatBRL(total_ded_reaj);
+
+            // Líquido
+            const liquido_atual = total_prov_atual - total_ded_atual;
+            const liquido_reaj = total_prov_reaj - total_ded_reaj;
+
+            document.getElementById('liquido_atual').textContent = formatBRL(liquido_atual);
+            document.getElementById('liquido_reaj').textContent = formatBRL(liquido_reaj);
+        }
+
+        // Ocultar o aviso do iOS se o JS conseguir rodar
+        const jsWarning = document.getElementById('js-warning');
+        if(jsWarning) jsWarning.style.display = 'none';
+
+        // Setup event listeners
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calcular);
+        });
+        document.getElementById('perc_qualificacao').addEventListener('change', calcular);
+
+        // Initial calculation
+        calcular();
+    </script>
+</body>
+</html>
