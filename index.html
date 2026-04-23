@@ -459,6 +459,14 @@
                     </div>
                     <div class="read-only-val provento-val" id="creche_reaj">R$ 0,00</div>
                 </div>
+                <div class="item-row">
+                    <div class="item-label">Auxílio Saúde</div>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="text" id="saude" value="" placeholder="0.00" step="0.01" inputmode="decimal">
+                    </div>
+                    <div class="read-only-val provento-val" id="saude_reaj">R$ 0,00</div>
+                </div>
 
                 <div class="item-row total-row">
                     <div class="item-label">Total Proventos</div>
@@ -615,6 +623,7 @@
 
             const v_alim = getVal('alimentacao');
             const v_creche = getVal('creche');
+            const v_saude = getVal('saude');
             const v_desc = getVal('descontos_pessoais');
 
             // Valores Reajustados e Progressão
@@ -630,10 +639,11 @@
             const r_risco = v_risco * multiplier;
             const r_qualif = r_venc * perc_qualif; // Acompanha o vencimento reajustado
             
-            // Verbas indenizatórias acompanhando o reajuste linear
+            // Verbas indenizatórias
             const r_itj = v_itj * multiplier; 
             const r_alim = v_alim * multiplier;
             const r_creche = v_creche * multiplier;
+            const r_saude = v_saude; // Auxílio saúde não sofre correção
 
             // Atualiza UI Proventos Reajustados
             document.getElementById('vencimento_reaj').textContent = formatBRL(r_venc);
@@ -642,10 +652,11 @@
             document.getElementById('qualificacao_reaj').textContent = formatBRL(r_qualif);
             document.getElementById('alimentacao_reaj').textContent = formatBRL(r_alim);
             document.getElementById('creche_reaj').textContent = formatBRL(r_creche);
+            document.getElementById('saude_reaj').textContent = formatBRL(r_saude);
 
             // Totais Proventos
-            const total_prov_atual = v_venc + v_itj + v_risco + v_qualif + v_alim + v_creche;
-            const total_prov_reaj = r_venc + r_itj + r_risco + r_qualif + r_alim + r_creche;
+            const total_prov_atual = v_venc + v_itj + v_risco + v_qualif + v_alim + v_creche + v_saude;
+            const total_prov_reaj = r_venc + r_itj + r_risco + r_qualif + r_alim + r_creche + r_saude;
             
             document.getElementById('total_prov_atual').textContent = formatBRL(total_prov_atual);
             document.getElementById('total_prov_reaj').textContent = formatBRL(total_prov_reaj);
