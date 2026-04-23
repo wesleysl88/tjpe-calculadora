@@ -359,10 +359,33 @@
         </header>
 
         <div class="glass-panel">
-            <div class="controls">
-                <div class="input-group">
+            <div class="controls" style="flex-wrap: wrap; gap: 1.5rem; justify-content: flex-start;">
+                <div class="input-group" style="align-items: flex-start;">
+                    <label for="cargo">Cargo</label>
+                    <select id="cargo" style="padding: 0.6rem; border-radius: 8px; border: 1px solid var(--card-border); outline: none; background: #fff; font-size: 0.95rem; width: 100%; max-width: 250px; color: var(--text-main);">
+                        <option value="APJ">Analista Jud. / Oficial (Superior)</option>
+                        <option value="PJ-III">Oficial de Justiça (Médio)</option>
+                        <option value="TPJ">Técnico Judiciário</option>
+                        <option value="PJ-I">Auxiliar Judiciário</option>
+                        <option value="CUSTOM">Personalizado (Manual)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" style="align-items: flex-start;">
+                    <label for="padrao_atual">Padrão Atual</label>
+                    <select id="padrao_atual" style="padding: 0.6rem; border-radius: 8px; border: 1px solid var(--card-border); outline: none; background: #fff; font-size: 0.95rem; width: 80px; color: var(--text-main);">
+                    </select>
+                </div>
+
+                <div class="input-group" style="align-items: flex-start;">
+                    <label for="padrao_futuro">Padrão Futuro</label>
+                    <select id="padrao_futuro" style="padding: 0.6rem; border-radius: 8px; border: 1px solid var(--primary); outline: none; background: #f0fdf4; font-size: 0.95rem; width: 80px; color: var(--success); font-weight: bold;">
+                    </select>
+                </div>
+
+                <div class="input-group" style="border-left: 1px solid var(--card-border); padding-left: 1.5rem; margin-left: auto;">
                     <label for="reajuste">Cenário de Reajuste (%)</label>
-                    <div class="input-wrapper" style="width: 150px; margin-top: 0;">
+                    <div class="input-wrapper" style="width: 120px; margin-top: 0;">
                         <span>%</span>
                         <input type="text" id="reajuste" value="5.3" step="0.1" inputmode="decimal" style="padding-left: 2rem; font-size: 1.2rem; font-weight: bold; text-align: center; color: var(--primary);">
                     </div>
@@ -567,6 +590,14 @@
             return { funafin, irrf };
         }
 
+        // Matriz de Vencimentos P00 a P21
+        const tabelaVencimentos = {
+            'APJ': [7634.45, 7825.32, 8032.69, 8257.59, 8501.20, 8764.72, 9049.60, 9357.29, 9689.45, 10047.97, 10434.83, 10852.20, 11503.34, 12308.58, 13293.27, 14489.66, 15938.64, 17691.87, 19814.88, 22390.82, 25525.53, 29354.38],
+            'PJ-III': [7252.72, 7434.03, 7631.04, 7844.72, 8076.13, 8326.49, 8597.11, 8889.42, 9204.99, 9545.58, 9913.07, 10309.59, 10928.18, 11693.13, 12628.60, 13765.15, 15141.69, 16807.28, 18824.14, 21271.28, 24249.28, 27886.68],
+            'TPJ': [5858.86, 6005.32, 6164.45, 6337.08, 6524.04, 6726.26, 6944.85, 7181.00, 7435.92, 7711.05, 8007.94, 8328.22, 8827.94, 9445.90, 10201.54, 11119.71, 12231.66, 13577.14, 15206.39, 17183.24, 19588.89, 22527.23],
+            'PJ-I': [5565.92, 5705.07, 5856.24, 6020.23, 6197.83, 6389.93, 6597.61, 6821.91, 7064.12, 7325.47, 7607.51, 7911.82, 8386.53, 8973.59, 9691.46, 10563.73, 11620.08, 12898.30, 14446.06, 16324.07, 18609.46, 21400.86]
+        };
+
         function calcular() {
             // Reajuste
             const reajustePercent = getVal('reajuste') / 100;
@@ -586,10 +617,18 @@
             const v_creche = getVal('creche');
             const v_desc = getVal('descontos_pessoais');
 
-            // Valores Reajustados
-            const r_venc = v_venc * multiplier;
+            // Valores Reajustados e Progressão
+            const cargo = document.getElementById('cargo').value;
+            let r_venc = v_venc * multiplier;
+            
+            if (cargo !== 'CUSTOM') {
+                const padrao_futuro = parseInt(document.getElementById('padrao_futuro').value);
+                const vencimentoFuturoTabela = tabelaVencimentos[cargo][padrao_futuro];
+                r_venc = vencimentoFuturoTabela * multiplier;
+            }
+
             const r_risco = v_risco * multiplier;
-            const r_qualif = r_venc * perc_qualif; // Acompanha o vencimento
+            const r_qualif = r_venc * perc_qualif; // Acompanha o vencimento reajustado
             
             // Verbas indenizatórias acompanhando o reajuste linear
             const r_itj = v_itj * multiplier; 
@@ -646,14 +685,63 @@
         const jsWarning = document.getElementById('js-warning');
         if(jsWarning) jsWarning.style.display = 'none';
 
-        // Setup event listeners
-        document.querySelectorAll('input').forEach(input => {
+        // Preencher os selects de Padrão (P00 a P21)
+        const selectAtual = document.getElementById('padrao_atual');
+        const selectFuturo = document.getElementById('padrao_futuro');
+        for (let i = 0; i <= 21; i++) {
+            const num = i.toString().padStart(2, '0');
+            selectAtual.add(new Option(`P${num}`, i));
+            selectFuturo.add(new Option(`P${num}`, i));
+        }
+
+        // Lógica de Mudança de Cargo e Padrão
+        function atualizarVencimentoPelaTabela() {
+            const cargo = document.getElementById('cargo').value;
+            if (cargo !== 'CUSTOM') {
+                const padraoAtual = parseInt(document.getElementById('padrao_atual').value);
+                const valorTabela = tabelaVencimentos[cargo][padraoAtual];
+                document.getElementById('vencimento').value = valorTabela.toFixed(2).replace('.', ',');
+                document.getElementById('padrao_atual').disabled = false;
+                document.getElementById('padrao_futuro').disabled = false;
+            } else {
+                document.getElementById('padrao_atual').disabled = true;
+                document.getElementById('padrao_futuro').disabled = true;
+            }
+            calcular();
+        }
+
+        document.getElementById('cargo').addEventListener('change', () => {
+            const cargo = document.getElementById('cargo').value;
+            if (cargo !== 'CUSTOM') {
+                // Ao mudar cargo, resetamos futuro para igual ao atual
+                document.getElementById('padrao_futuro').value = document.getElementById('padrao_atual').value;
+            }
+            atualizarVencimentoPelaTabela();
+        });
+
+        document.getElementById('padrao_atual').addEventListener('change', () => {
+            document.getElementById('padrao_futuro').value = document.getElementById('padrao_atual').value;
+            atualizarVencimentoPelaTabela();
+        });
+
+        document.getElementById('padrao_futuro').addEventListener('change', calcular);
+
+        // Se editar manualmente, muda para custom
+        document.getElementById('vencimento').addEventListener('input', () => {
+            document.getElementById('cargo').value = 'CUSTOM';
+            document.getElementById('padrao_atual').disabled = true;
+            document.getElementById('padrao_futuro').disabled = true;
+            calcular();
+        });
+
+        // Setup event listeners for other inputs
+        document.querySelectorAll('input:not(#vencimento)').forEach(input => {
             input.addEventListener('input', calcular);
         });
         document.getElementById('perc_qualificacao').addEventListener('change', calcular);
 
         // Initial calculation
-        calcular();
+        atualizarVencimentoPelaTabela(); // Já chama o calcular() e inicializa a tabela
     </script>
 </body>
 </html>
